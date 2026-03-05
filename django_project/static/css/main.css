@@ -31,12 +31,20 @@ body {
 .card {
     display: grid;
     gap: 10px;
+    margin-bottom: 20px;
 }
 
 input, select, button {
     padding: 10px;
     border: 1px solid #ced4da;
     border-radius: 6px;
+}
+
+textarea {
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-family: Arial, sans-serif;
 }
 
 button {
@@ -58,4 +66,26 @@ button {
 
 .message.success {
     color: #15803d;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    margin-top: 10px;
+}
+
+th,
+td {
+    border: 1px solid #e5e7eb;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background: #f8fafc;
+}
+
+a {
+    color: #1d4ed8;
 }
