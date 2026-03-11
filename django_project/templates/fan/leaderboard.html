@@ -1,0 +1,26 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h2>Fan - Leaderboard</h2>
+<form method="get" class="card">
+    <label>Metric</label>
+    <input name="metric" type="text" value="{{ metric }}" placeholder="runs / goals / wickets">
+    <button type="submit">Show Leaderboard</button>
+</form>
+
+<table>
+    <thead><tr><th>Player</th><th>Team</th><th>Metric</th><th>Value</th><th>Match</th></tr></thead>
+    <tbody>
+    {% for item in stats %}
+        <tr>
+            <td>{{ item.player_name }}</td>
+            <td>{{ item.team_name }}</td>
+            <td>{{ item.metric_name }}</td>
+            <td>{{ item.metric_value }}</td>
+            <td>{{ item.match.home_team }} vs {{ item.match.away_team }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5">No leaderboard data available.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

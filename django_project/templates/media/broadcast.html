@@ -1,0 +1,53 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h2>Media - Broadcast Hub</h2>
+<form method="get" class="card">
+    <label>Sort Broadcasts</label>
+    <select name="sort">
+        <option value="-updated_at" {% if sort == '-updated_at' %}selected{% endif %}>Recently Updated</option>
+        <option value="channel_name" {% if sort == 'channel_name' %}selected{% endif %}>Channel A-Z</option>
+    </select>
+    <button type="submit">Apply</button>
+</form>
+<form method="post" class="card">
+    {% csrf_token %}
+    <label>Match</label>
+    <select name="match_id" required>
+        <option value="">Select match</option>
+        {% for match in matches %}
+        <option value="{{ match.id }}">{{ match.sport }}: {{ match.home_team }} vs {{ match.away_team }}</option>
+        {% endfor %}
+    </select>
+    <label>Channel Name</label>
+    <input name="channel_name" type="text" required>
+    <label>Stream URL</label>
+    <input name="stream_url" type="url">
+    <label><input type="checkbox" name="is_live"> Is Live</label>
+    <button type="submit">Save Broadcast Session</button>
+</form>
+
+<h3>Broadcast Sessions</h3>
+<table>
+    <thead><tr><th>Channel</th><th>Match</th><th>Live</th><th>Updated</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for item in broadcasts %}
+        <tr>
+            <td>{{ item.channel_name }}</td>
+            <td>{{ item.match.home_team }} vs {{ item.match.away_team }}</td>
+            <td>{% if item.is_live %}ON AIR{% else %}OFFLINE{% endif %}</td>
+            <td>{{ item.updated_at }}</td>
+            <td>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle">
+                    <input type="hidden" name="broadcast_id" value="{{ item.id }}">
+                    <button type="submit">Toggle Live</button>
+                </form>
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5">No broadcast sessions yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

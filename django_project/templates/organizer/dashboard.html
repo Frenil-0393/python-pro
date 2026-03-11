@@ -1,0 +1,25 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h2>Organizer Dashboard</h2>
+<p>Welcome, {{ user_name }}.</p>
+<table>
+    <thead><tr><th>Total Matches</th><th>Live Matches</th><th>Upcoming</th><th>Score Updates</th><th>Player Stats</th></tr></thead>
+    <tbody>
+        <tr>
+            <td>{{ total_matches }}</td>
+            <td>{{ live_matches }}</td>
+            <td>{{ upcoming_matches }}</td>
+            <td>{{ total_score_updates }}</td>
+            <td>{{ total_player_stats }}</td>
+        </tr>
+    </tbody>
+</table>
+<ul>
+    <li><a href="{% url 'organizer:schedule' %}">Manage Schedule</a></li>
+    <li><a href="{% url 'organizer:scores' %}">Update Live Scores</a></li>
+    <li><a href="{% url 'organizer:players' %}">Manage Player Stats</a></li>
+    <li><a href="{% url 'organizer:export_matches' %}">Export Matches CSV</a></li>
+    <li><a href="{% url 'organizer:export_scores' %}">Export Scores CSV</a></li>
+    <li><a href="{% url 'organizer:export_players' %}">Export Player Stats CSV</a></li>
+</ul>
+{% endblock %}

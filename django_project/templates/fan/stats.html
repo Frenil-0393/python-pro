@@ -1,0 +1,37 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h2>Fan - Player Statistics</h2>
+<form method="get" class="card">
+    <label>Filter by Metric</label>
+    <input name="metric" type="text" value="{{ metric }}" placeholder="Runs / Goals / Wickets">
+    <label>Filter by Team</label>
+    <input name="team" type="text" value="{{ team }}" placeholder="Team name">
+    <label>Sort</label>
+    <select name="sort">
+        <option value="player_name" {% if sort == 'player_name' %}selected{% endif %}>Player Name A-Z</option>
+        <option value="-updated_at" {% if sort == '-updated_at' %}selected{% endif %}>Recently Updated</option>
+    </select>
+    <button type="submit">Apply Filters</button>
+</form>
+<table>
+    <thead><tr><th>Player</th><th>Team</th><th>Metric</th><th>Value</th><th>Match</th></tr></thead>
+    <tbody>
+    {% for item in stats %}
+        <tr>
+            <td>{{ item.player_name }}</td>
+            <td>{{ item.team_name }}</td>
+            <td>{{ item.metric_name }}</td>
+            <td>{{ item.metric_value }}</td>
+            <td>{{ item.match.home_team }} vs {{ item.match.away_team }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5">No stats available.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+<div>
+    {% if stats.has_previous %}<a href="?metric={{ metric }}&team={{ team }}&sort={{ sort }}&page={{ stats.previous_page_number }}">Previous</a>{% endif %}
+    <span> Page {{ stats.number }} of {{ stats.paginator.num_pages }} </span>
+    {% if stats.has_next %}<a href="?metric={{ metric }}&team={{ team }}&sort={{ sort }}&page={{ stats.next_page_number }}">Next</a>{% endif %}
+</div>
+{% endblock %}

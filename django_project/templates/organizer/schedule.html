@@ -1,0 +1,86 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h2>Organizer - Schedule</h2>
+<form method="get" class="card">
+    <label>Sport Filter</label>
+    <input name="sport" type="text" value="{{ sport }}" placeholder="Cricket">
+    <label>Status</label>
+    <select name="status">
+        <option value="">All</option>
+        <option value="scheduled" {% if status_filter == 'scheduled' %}selected{% endif %}>Scheduled</option>
+        <option value="live" {% if status_filter == 'live' %}selected{% endif %}>Live</option>
+        <option value="finished" {% if status_filter == 'finished' %}selected{% endif %}>Finished</option>
+    </select>
+    <button type="submit">Apply Filters</button>
+</form>
+<form method="post" class="card">
+    {% csrf_token %}
+    <label>Sport</label>
+    <input name="sport" type="text" placeholder="Cricket" required>
+    <label>Home Team</label>
+    <input name="home_team" type="text" required>
+    <label>Away Team</label>
+    <input name="away_team" type="text" required>
+    <label>Venue</label>
+    <input name="venue" type="text" required>
+    <label>Start Time</label>
+    <input name="start_time" type="datetime-local" required>
+    <label>Status</label>
+    <select name="status">
+        <option value="scheduled">Scheduled</option>
+        <option value="live">Live</option>
+        <option value="finished">Finished</option>
+    </select>
+    <button type="submit">Create Fixture</button>
+</form>
+
+<h3>Matches</h3>
+<form method="post" class="card">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="bulk_status">
+    <p style="margin:0; font-size:12px; color:#555;">Select rows in the table, then apply bulk status.</p>
+    <label>Bulk Status</label>
+    <select name="status">
+        <option value="scheduled">Scheduled</option>
+        <option value="live">Live</option>
+        <option value="finished">Finished</option>
+    </select>
+    <button type="submit">Update Selected Matches</button>
+
+<table>
+    <thead><tr><th>Select</th><th>Sport</th><th>Fixture</th><th>Venue</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for match in matches %}
+        <tr>
+            <td><input type="checkbox" name="match_ids" value="{{ match.id }}"></td>
+            <td>{{ match.sport }}</td>
+            <td>{{ match.home_team }} vs {{ match.away_team }}</td>
+            <td>{{ match.venue }}</td>
+            <td>{{ match.get_status_display }}</td>
+            <td>
+                <form method="post" style="margin-bottom:6px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="set_status">
+                    <input type="hidden" name="match_id" value="{{ match.id }}">
+                    <select name="status">
+                        <option value="scheduled">Scheduled</option>
+                        <option value="live">Live</option>
+                        <option value="finished">Finished</option>
+                    </select>
+                    <button type="submit">Update</button>
+                </form>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="match_id" value="{{ match.id }}">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6">No matches yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</form>
+{% endblock %}

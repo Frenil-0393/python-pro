@@ -1,0 +1,56 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h2>Media - Highlights Manager</h2>
+<form method="get" class="card">
+    <label>Search Title</label>
+    <input name="q" type="text" value="{{ q }}" placeholder="Search highlight title">
+    <label>Sort</label>
+    <select name="sort">
+        <option value="-published_at" {% if sort == '-published_at' %}selected{% endif %}>Newest</option>
+        <option value="title" {% if sort == 'title' %}selected{% endif %}>Title A-Z</option>
+    </select>
+    <button type="submit">Apply</button>
+</form>
+<form method="post" class="card">
+    {% csrf_token %}
+    <label>Match</label>
+    <select name="match_id" required>
+        <option value="">Select match</option>
+        {% for match in matches %}
+        <option value="{{ match.id }}">{{ match.sport }}: {{ match.home_team }} vs {{ match.away_team }}</option>
+        {% endfor %}
+    </select>
+    <label>Title</label>
+    <input name="title" type="text" required>
+    <label>Description</label>
+    <input name="description" type="text">
+    <label>Duration</label>
+    <input name="duration" type="text" placeholder="05:20">
+    <button type="submit">Publish Highlight</button>
+</form>
+
+<h3>Published Highlights</h3>
+<table>
+    <thead><tr><th>Title</th><th>Match</th><th>Duration</th><th>Published</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for item in highlights %}
+        <tr>
+            <td>{{ item.title }}</td>
+            <td>{{ item.match.home_team }} vs {{ item.match.away_team }}</td>
+            <td>{{ item.duration }}</td>
+            <td>{{ item.published_at }}</td>
+            <td>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="highlight_id" value="{{ item.id }}">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5">No highlights yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
