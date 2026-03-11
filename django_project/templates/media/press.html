@@ -1,7 +1,6 @@
 {% extends 'shared/base.html' %}
 {% block content %}
 <h2>Media - Press Room</h2>
-<p><a href="{% url 'media:export_press' %}">Export Press Releases CSV</a></p>
 <form method="post" class="card">
     {% csrf_token %}
     <label>Sport</label>
@@ -28,13 +27,6 @@
         <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
         <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
     </select>
-    <label>Sort</label>
-    <select name="sort">
-        <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Newest</option>
-        <option value="created_at" {% if sort == 'created_at' %}selected{% endif %}>Oldest</option>
-        <option value="sport" {% if sort == 'sport' %}selected{% endif %}>Sport A-Z</option>
-        <option value="status" {% if sort == 'status' %}selected{% endif %}>Status</option>
-    </select>
     <button type="submit">Apply Filters</button>
 </form>
 
@@ -49,16 +41,6 @@
             <td>{{ item.get_status_display }}</td>
             <td>{{ item.created_at }}</td>
             <td>
-                <form method="post" style="margin-bottom:6px;">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="set_status">
-                    <input type="hidden" name="press_id" value="{{ item.id }}">
-                    <select name="status">
-                        <option value="draft" {% if item.status == 'draft' %}selected{% endif %}>Draft</option>
-                        <option value="published" {% if item.status == 'published' %}selected{% endif %}>Published</option>
-                    </select>
-                    <button type="submit">Update</button>
-                </form>
                 <form method="post">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="delete">

@@ -1,8 +1,5 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator
-from django.db.models import F
-from django.db.models import FloatField
-from django.db.models.functions import Cast
 
 from common.decorators import role_required
 from media.models import Highlight
@@ -26,10 +23,7 @@ def timetable_view(request):
 @role_required("fan")
 def live_scores_view(request):
 	sport = request.GET.get("sport", "").strip()
-	allowed_sorts = {"-created_at", "created_at"}
 	sort = request.GET.get("sort", "-created_at").strip() or "-created_at"
-	if sort not in allowed_sorts:
-		sort = "-created_at"
 	live_matches = Match.objects.filter(status=Match.STATUS_LIVE)
 	if sport:
 		live_matches = live_matches.filter(sport__icontains=sport)
@@ -54,10 +48,7 @@ def live_scores_view(request):
 def stats_view(request):
 	metric = request.GET.get("metric", "").strip()
 	team = request.GET.get("team", "").strip()
-	allowed_sorts = {"player_name", "-updated_at"}
 	sort = request.GET.get("sort", "player_name").strip() or "player_name"
-	if sort not in allowed_sorts:
-		sort = "player_name"
 	stats = PlayerStat.objects.select_related("match").all()
 	if metric:
 		stats = stats.filter(metric_name__icontains=metric)
@@ -76,29 +67,17 @@ def stats_view(request):
 @role_required("fan")
 def leaderboard_view(request):
 	metric = request.GET.get("metric", "runs").strip() or "runs"
-	order = request.GET.get("order", "desc").strip() or "desc"
-	order_by = "-metric_value_num" if order == "desc" else "metric_value_num"
 	stats = (
 		PlayerStat.objects.filter(metric_name__icontains=metric)
-		.annotate(metric_value_num=Cast("metric_value", FloatField()))
 		.select_related("match")
-		.order_by(order_by, "player_name")
+		.order_by("-metric_value", "player_name")
 	)
-	return render(request, "fan/leaderboard.html", {"stats": stats, "metric": metric, "order": order})
+	return render(request, "fan/leaderboard.html", {"stats": stats, "metric": metric})
 
 
 @role_required("fan")
 def highlights_view(request):
-	if request.method == "POST":
-		action = request.POST.get("action", "")
-		if action == "view":
-			highlight_id = request.POST.get("highlight_id")
-			Highlight.objects.filter(id=highlight_id).update(views=F("views") + 1)
-
-	allowed_sorts = {"-published_at", "-views"}
 	sort = request.GET.get("sort", "-published_at").strip() or "-published_at"
-	if sort not in allowed_sorts:
-		sort = "-published_at"
 	highlights = Highlight.objects.select_related("match").order_by(sort)
 	paginator = Paginator(highlights, 10)
 	page_obj = paginator.get_page(request.GET.get("page"))

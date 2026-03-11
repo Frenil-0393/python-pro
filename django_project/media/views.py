@@ -1,7 +1,5 @@
 from django.contrib import messages
-from django.http import HttpResponse
 from django.shortcuts import redirect, render
-import csv
 
 from common.decorators import role_required
 from media.models import BroadcastSession, Highlight, PressRelease
@@ -48,8 +46,6 @@ def broadcast_view(request):
 		return redirect("media:broadcast")
 
 	sort = request.GET.get("sort", "-updated_at").strip() or "-updated_at"
-	if sort not in {"-updated_at", "channel_name"}:
-		sort = "-updated_at"
 	matches = Match.objects.all()
 	broadcasts = BroadcastSession.objects.select_related("match").order_by(sort)
 	return render(request, "media/broadcast.html", {"matches": matches, "broadcasts": broadcasts, "sort": sort})
@@ -89,8 +85,6 @@ def highlights_view(request):
 
 	q = request.GET.get("q", "").strip()
 	sort = request.GET.get("sort", "-published_at").strip() or "-published_at"
-	if sort not in {"-published_at", "title"}:
-		sort = "-published_at"
 	matches = Match.objects.all()
 	highlights = Highlight.objects.select_related("match").all()
 	if q:
@@ -115,15 +109,6 @@ def press_view(request):
 			else:
 				messages.error(request, "Press release not found.")
 			return redirect("media:press")
-		if action == "set_status":
-			press_id = request.POST.get("press_id")
-			status = request.POST.get("status", PressRelease.STATUS_DRAFT)
-			updated = PressRelease.objects.filter(id=press_id).update(status=status)
-			if updated:
-				messages.success(request, "Press status updated.")
-			else:
-				messages.error(request, "Press release not found.")
-			return redirect("media:press")
 
 		sport = request.POST.get("sport", "").strip()
 		headline = request.POST.get("headline", "").strip()
@@ -140,15 +125,11 @@ def press_view(request):
 
 	status_filter = request.GET.get("status", "").strip()
 	sport_filter = request.GET.get("sport", "").strip()
-	sort = request.GET.get("sort", "-created_at").strip() or "-created_at"
-	if sort not in {"-created_at", "created_at", "sport", "status"}:
-		sort = "-created_at"
 	press_releases = PressRelease.objects.all()
 	if status_filter:
 		press_releases = press_releases.filter(status=status_filter)
 	if sport_filter:
 		press_releases = press_releases.filter(sport__icontains=sport_filter)
-	press_releases = press_releases.order_by(sort)
 	return render(
 		request,
 		"media/press.html",
@@ -156,17 +137,5 @@ def press_view(request):
 			"press_releases": press_releases,
 			"status_filter": status_filter,
 			"sport_filter": sport_filter,
-			"sort": sort,
 		},
 	)
-
-
-@role_required("media")
-def export_press_csv(request):
-	response = HttpResponse(content_type="text/csv")
-	response["Content-Disposition"] = 'attachment; filename="press_releases.csv"'
-	writer = csv.writer(response)
-	writer.writerow(["Sport", "Headline", "Status", "Created"])
-	for item in PressRelease.objects.all():
-		writer.writerow([item.sport, item.headline, item.status, item.created_at])
-	return response
