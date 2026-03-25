@@ -1,5 +1,7 @@
 from django.contrib import messages
+from django.urls import reverse
 from django.shortcuts import redirect, render
+from urllib.parse import urlencode
 
 from common.decorators import role_required
 from media.models import BroadcastSession, Highlight, PressRelease
@@ -8,7 +10,23 @@ from organizer.models import Match
 
 @role_required("media")
 def dashboard(request):
-	return render(request, "media/dashboard.html", {"user_name": request.user.first_name or "Media"})
+	broadcasts = BroadcastSession.objects.select_related("match")
+	highlights = Highlight.objects.select_related("match")
+	press_releases = PressRelease.objects.all()
+	return render(
+		request,
+		"media/dashboard.html",
+		{
+			"user_name": request.user.first_name or "Media",
+			"broadcast_count": broadcasts.count(),
+			"live_broadcast_count": broadcasts.filter(is_live=True).count(),
+			"highlight_count": highlights.count(),
+			"press_count": press_releases.count(),
+			"recent_broadcasts": broadcasts[:4],
+			"recent_highlights": highlights[:4],
+			"recent_press": press_releases[:3],
+		},
+	)
 
 
 @role_required("media")
@@ -17,14 +35,17 @@ def broadcast_view(request):
 		action = request.POST.get("action", "create")
 		if action == "toggle":
 			broadcast_id = request.POST.get("broadcast_id")
+			sort = request.POST.get("sort", "-updated_at").strip() or "-updated_at"
+			next_state = request.POST.get("next_state", "").strip().lower()
 			item = BroadcastSession.objects.filter(id=broadcast_id).first()
 			if not item:
 				messages.error(request, "Broadcast not found.")
 			else:
-				item.is_live = not item.is_live
+				item.is_live = next_state == "true" if next_state in {"true", "false"} else not item.is_live
 				item.save(update_fields=["is_live", "updated_at"])
 				messages.success(request, "Broadcast live status updated.")
-			return redirect("media:broadcast")
+			query = urlencode({"sort": sort})
+			return redirect(f"{reverse('media:broadcast')}?{query}")
 
 		match_id = request.POST.get("match_id")
 		channel_name = request.POST.get("channel_name", "").strip()
@@ -48,7 +69,17 @@ def broadcast_view(request):
 	sort = request.GET.get("sort", "-updated_at").strip() or "-updated_at"
 	matches = Match.objects.all()
 	broadcasts = BroadcastSession.objects.select_related("match").order_by(sort)
-	return render(request, "media/broadcast.html", {"matches": matches, "broadcasts": broadcasts, "sort": sort})
+	return render(
+		request,
+		"media/broadcast.html",
+		{
+			"matches": matches,
+			"broadcasts": broadcasts,
+			"sort": sort,
+			"broadcast_count": broadcasts.count(),
+			"live_count": broadcasts.filter(is_live=True).count(),
+		},
+	)
 
 
 @role_required("media")
@@ -93,7 +124,13 @@ def highlights_view(request):
 	return render(
 		request,
 		"media/highlights.html",
-		{"matches": matches, "highlights": highlights, "q": q, "sort": sort},
+		{
+			"matches": matches,
+			"highlights": highlights,
+			"q": q,
+			"sort": sort,
+			"highlight_count": highlights.count(),
+		},
 	)
 
 
@@ -137,5 +174,7 @@ def press_view(request):
 			"press_releases": press_releases,
 			"status_filter": status_filter,
 			"sport_filter": sport_filter,
+			"press_count": press_releases.count(),
+			"published_count": press_releases.filter(status=PressRelease.STATUS_PUBLISHED).count(),
 		},
 	)

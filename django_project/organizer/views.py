@@ -16,6 +16,9 @@ def dashboard(request):
 		"live_matches": Match.objects.filter(status=Match.STATUS_LIVE).count(),
 		"total_score_updates": ScoreUpdate.objects.count(),
 		"total_player_stats": PlayerStat.objects.count(),
+		"recent_matches": Match.objects.order_by("-start_time")[:4],
+		"recent_score_updates": ScoreUpdate.objects.select_related("match")[:4],
+		"recent_player_stats": PlayerStat.objects.select_related("match").order_by("-updated_at")[:4],
 	}
 	return render(request, "organizer/dashboard.html", context)
 
@@ -71,7 +74,16 @@ def schedule_view(request):
 		return redirect("organizer:schedule")
 
 	matches = Match.objects.all()
-	return render(request, "organizer/schedule.html", {"matches": matches})
+	return render(
+		request,
+		"organizer/schedule.html",
+		{
+			"matches": matches,
+			"match_count": matches.count(),
+			"scheduled_count": matches.filter(status=Match.STATUS_SCHEDULED).count(),
+			"live_count": matches.filter(status=Match.STATUS_LIVE).count(),
+		},
+	)
 
 
 @role_required("organizer")
@@ -117,6 +129,7 @@ def scores_view(request):
 		{
 			"matches": matches,
 			"score_updates": score_updates,
+			"update_count": score_updates.count(),
 		},
 	)
 
@@ -169,6 +182,7 @@ def players_view(request):
 		{
 			"matches": matches,
 			"player_stats": player_stats,
+			"player_count": player_stats.count(),
 		},
 	)
 
