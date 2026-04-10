@@ -32,7 +32,7 @@ def dashboard(request):
 @role_required("media")
 def broadcast_view(request):
 	if request.method == "POST":
-		action = request.POST.get("action", "create")
+		action = request.POST.get("action", "create") 
 		if action == "toggle":
 			broadcast_id = request.POST.get("broadcast_id")
 			sort = request.POST.get("sort", "-updated_at").strip() or "-updated_at"
